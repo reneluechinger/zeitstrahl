@@ -16,15 +16,26 @@ function toast(msg, ms = 2600) {
 }
 
 // ---------- Hütchen (Stationen mit gleicher Position) ----------
+// Im letzten Meter bekommt jede Station ein eigenes Hütchen mit genauer Angabe
+function isEndZone(pos, len) { const rest = len - pos; return rest > 0 && rest < 1; }
+function fmtSmall(m) {
+  if (m >= 1) return fmtNum(m, 2) + " m";
+  if (m >= 0.01) return fmtNum(Math.round(m * 100), 0) + " cm";
+  return fmtNum(Math.max(m * 1000, 0.1), m * 1000 < 1 ? 1 : 0) + " mm";
+}
 function cones(len) {
   const map = new Map();
   for (const st of STATIONS) {
-    const p = roundHalf(positionM(st, len));
-    if (!map.has(p)) map.set(p, []);
-    map.get(p).push(st);
+    const exact = positionM(st, len);
+    const end = isEndZone(exact, len);
+    const key = end ? "x" + st.id : roundHalf(exact);
+    if (!map.has(key)) map.set(key, { pos: end ? exact : roundHalf(exact), exact: end, stations: [] });
+    map.get(key).stations.push(st);
   }
-  return [...map.entries()].sort((a, b) => a[0] - b[0])
-    .map(([pos, stations], i) => ({ n: i + 1, pos, stations }));
+  return [...map.values()].sort((a, b) => a.pos - b.pos).map((c, i) => ({ n: i + 1, ...c }));
+}
+function coneDist(c) {
+  return c.exact ? `${fmtSmall(plan.len - c.pos)} vor dem Ziel` : fmtDist(c.pos);
 }
 function coneLabel(c) {
   return c.stations.map(s => s.title).join(" · ");
@@ -74,7 +85,7 @@ function drawPlan(map, layer, clickable) {
     const gap = c.stations.every(s => s.gap);
     const icon = L.divIcon({ className: "conemark" + (gap ? " gap" : ""), html: c.n, iconSize: [26, 26] });
     const mk = L.marker(conePoint(c.pos), { icon }).addTo(layer);
-    mk.bindTooltip(`Hütchen ${c.n} · ${fmtDist(c.pos)}<br>${coneLabel(c)}`);
+    mk.bindTooltip(`Hütchen ${c.n} · ${coneDist(c)}<br>${coneLabel(c)}`);
     if (clickable) mk.on("click", () => openStations(c.stations));
   }
   map.fitBounds(L.latLngBounds([plan.s, end]).pad(0.25));
@@ -117,7 +128,7 @@ function renderConeList(el, tappable) {
     const done = c.stations.every(s => seen.has(String(s.id)));
     const b = document.createElement(tappable ? "button" : "div");
     b.className = "cone" + (gap ? " gap" : "");
-    b.innerHTML = `<span class="n">${c.n}</span><span class="m">${fmtDist(c.pos)}</span><span class="t">${coneLabel(c)}</span>${tappable && done ? '<span class="seen">✓</span>' : ""}`;
+    b.innerHTML = `<span class="n">${c.n}</span><span class="m">${coneDist(c)}</span><span class="t">${coneLabel(c)}</span>${tappable && done ? '<span class="seen">✓</span>' : ""}`;
     if (tappable) b.addEventListener("click", () => openStations(c.stations));
     el.appendChild(b);
   }
@@ -180,7 +191,7 @@ function renderPrint() {
     if (k % 4 === 0) { sheet = document.createElement("div"); sheet.className = "sheet"; el.appendChild(sheet); }
     const ids = c.stations.map(s => s.id).join(",");
     const d = document.createElement("div"); d.className = "pcard";
-    d.innerHTML = `<div class="pn">Hütchen ${c.n}</div><div class="pm">bei ${fmtDist(c.pos)}</div>
+    d.innerHTML = `<div class="pn">Hütchen ${c.n}</div><div class="pm">${c.exact ? coneDist(c) : "bei " + fmtDist(c.pos)}</div>
       ${qrSvg(`ZS:${plan.len}:${ids}`)}
       <div class="pt">${c.stations.map(s => s.gap ? "· Zwischenhütchen" : `· ${s.title}`).join("<br>")}</div>`;
     sheet.appendChild(d);
@@ -218,7 +229,7 @@ function renderStation() {
   seen.add(String(s.id)); save("zs-seen", [...seen]);
   const [n, u] = numParts(s);
   const pct = (1 - s.years / UNIVERSE_AGE) * 100;
-  const pos = positionM(s, plan.len), rest = plan.len - roundHalf(pos);
+  const pos = positionM(s, plan.len), end = isEndZone(pos, plan.len), rest = plan.len - (end ? pos : roundHalf(pos));
   const visual = s.gap ? `<div class="gapbg"></div>` : `<img class="photo" src="${imgUrl(s.img)}" alt="${s.title}">`;
   const credit = s.gap ? "" : `<div class="credit">Bild: ${s.credit} · ${s.license} · <a href="${commonsPage(s.img)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>`;
   const many = cur.list.length > 1;
@@ -230,7 +241,9 @@ function renderStation() {
       <h1>${s.title}</h1><p>${s.text}</p>
       <div class="band"><div class="track"><div class="marker" style="left:${pct}%"></div></div>
         <div class="ends"><span>Urknall</span><span>Heute</span></div></div>
-      <div class="meta"><span>Du bist bei <b>${fmtDist(pos)}</b></span><span>${rest > 0 ? `noch ${fmtDist(rest)} bis heute` : "Ziel erreicht"}</span></div>
+      <div class="meta">${end
+        ? `<span>Nur noch <b>${fmtSmall(rest)}</b> bis heute!</span><span>bei ${fmtNum(pos, pos > plan.len - 0.01 ? 3 : 2)} m</span>`
+        : `<span>Du bist bei <b>${fmtDist(pos)}</b></span><span>${rest > 0 ? `noch ${fmtDist(rest)} bis heute` : "Ziel erreicht"}</span>`}</div>
       ${credit}
     </div>`;
   $("#stClose").onclick = closeStation;
