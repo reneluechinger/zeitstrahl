@@ -23,8 +23,8 @@ const STATIONS = [
     text: "Ein Himmelskörper, etwa so gross wie der Mars, kracht in die junge Erde. Aus den Trümmern bildet sich der Mond.",
     img: "Artist's_concept_of_collision_at_HD_172555.jpg", credit: "NASA / JPL-Caltech", license: "gemeinfrei" },
   { id: 6, title: "Die ersten Meere", years: 4.3e9, when: "vor ca. 4,3 Milliarden Jahren",
-    text: "Die Erde kühlt ab. Wasserdampf regnet ab und füllt die ersten Ozeane.",
-    img: "Early_Earth.jpg", credit: "Wikimedia Commons (Early Earth.jpg)", license: "siehe Commons" },
+    text: "Die Erde kühlt ab. Wasserdampf regnet ab und füllt die ersten Ozeane. Aus dem Meer ragen Vulkaninseln.",
+    img: "Archean.png", credit: "Tim Bertelink", license: "siehe Commons" },
   { id: 7, title: "Das erste Leben", years: 3.48e9, when: "vor ca. 3,5 Milliarden Jahren",
     text: "Winzige Bakterien bilden Matten im Wasser. Ihre Spuren sind die ältesten sicheren Lebenszeichen. Ähnliche Bakterienhügel wachsen heute noch in Australien.",
     img: "Stromatolites_in_Sharkbay.jpg", credit: "Paul Harrison", license: "siehe Commons" },
@@ -32,20 +32,20 @@ const STATIONS = [
     text: "Bakterien produzieren so viel Sauerstoff, dass er sich in der Luft sammelt. Eisen im Meer rostet und bildet gestreiftes Gestein.",
     img: "Jaspilite_banded_iron_formation_(BIF)_(Hamersely_Group,_Neoarchean_to_Paleoproterozoic,_~2.47-2.55_Ga;_Hamersley_Range,_Western_Australia)_(15036345446).jpg", credit: "James St. John", license: "CC BY 2.0" },
   { id: 9, title: "Die ersten Mehrzeller", years: 1.6e9, when: "vor ca. 1,6 Milliarden Jahren",
-    text: "Zellen beginnen zusammenzuarbeiten. Die ersten Lebewesen aus vielen Zellen entstehen, zum Beispiel einfache Algen.",
-    img: "Grypania_spiralis,_Empire_Mine_near_Ishpeming_MI.jpg", credit: "James St. John", license: "CC BY 2.0" },
+    text: "Zellen beginnen zusammenzuarbeiten. Die ersten Lebewesen aus vielen Zellen entstehen, zum Beispiel einfache Algen. Im Bild: eine heutige Kugelalge (Volvox) unter dem Mikroskop.",
+    img: "Volvox_aureus.jpg", credit: "Matthew Herron", license: "siehe Commons" },
   { id: 10, title: "Explosion der Tiervielfalt", years: 538.8e6, when: "vor 539 Millionen Jahren",
-    text: "In kurzer Zeit entstehen viele Tiergruppen mit Augen, Panzern und Beinen. Anomalocaris war einer der ersten grossen Räuber.",
-    img: "20191203_Anomalocaris_canadensis.png", credit: "Junnn11", license: "CC BY-SA 4.0" },
+    text: "In kurzer Zeit entstehen viele Tiergruppen mit Augen, Panzern und Beinen. Typisch für diese Zeit: Trilobiten, Gliedertiere mit hartem Panzer. Im Bild: ein versteinerter Trilobit.",
+    img: "ElrathiakingiUtahWheelerCambrian.jpg", credit: "Mark A. Wilson", license: "siehe Commons" },
   { id: 11, title: "Pflanzen erobern das Land", years: 470e6, when: "vor ca. 470 Millionen Jahren",
-    text: "Die ersten Pflanzen wagen sich an Land. Sie sind winzig und haben weder Wurzeln noch Blätter.",
-    img: "Cooksonia_pertoni.png", credit: "Smith609", license: "siehe Commons" },
+    text: "Die ersten Pflanzen wagen sich an Land. Sie sind flach und klein und ähneln heutigen Lebermoosen wie diesem hier. Farne kommen erst viel später.",
+    img: "Brunnenlebermoos_Marchantia_polymorpha_1.jpg", credit: "Holger Krisp", license: "siehe Commons" },
   { id: 12, title: "Die ersten Dinosaurier", years: 230e6, when: "vor ca. 230 Millionen Jahren",
     text: "Die ersten Dinosaurier tauchen auf, zum Beispiel Herrerasaurus in Südamerika.",
-    img: "Herrerasaurus_ischigualastensis_Illustration.jpg", credit: "Fred Wierum", license: "CC BY-SA 4.0" },
+    img: "Herrerasaurus_front_(Field_museum).jpg", credit: "Dallas Krentzel", license: "siehe Commons" },
   { id: 13, title: "Der Asteroid", years: 66e6, when: "vor 66 Millionen Jahren",
     text: "Ein rund 10 km grosser Asteroid schlägt in Mexiko ein. Die meisten Dinosaurier sterben aus. Ihre Nachfahren leben weiter: die Vögel.",
-    img: "Chicxulub_impact_-_artist_impression.jpg", credit: "Donald E. Davis / NASA", license: "gemeinfrei" },
+    img: "Chicxulub_crater.png", credit: "Anynobody (Wikimedia Commons)", license: "siehe Commons" },
   { id: 14, title: "Die ersten Menschen", years: 300e3, when: "vor ca. 300 000 Jahren",
     text: "Die ältesten bekannten Funde unserer Art, Homo sapiens, stammen aus Marokko.",
     img: "Homo_sapiens_sapiens_(Fundort_Jebel_Irhoud_Marokko).jpg", credit: "Rekonstruktion A. & A. Kennis, Neanderthal Museum", license: "siehe Commons" },
@@ -64,8 +64,8 @@ function commonsPage(file) {
 function positionM(st, trackLen) {
   return trackLen * (1 - st.years / UNIVERSE_AGE);
 }
+// auf halbe Meter gerundet
+function roundHalf(m) { return Math.round(m * 2) / 2; }
 function fmtDist(m) {
-  if (m >= 1) return m.toLocaleString("de-CH", { maximumFractionDigits: 2 }) + " m";
-  if (m >= 0.01) return (m * 100).toLocaleString("de-CH", { maximumFractionDigits: 1 }) + " cm";
-  return (m * 1000).toLocaleString("de-CH", { maximumFractionDigits: 2 }) + " mm";
+  return roundHalf(m).toLocaleString("de-CH", { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + " m";
 }

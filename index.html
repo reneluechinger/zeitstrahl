@@ -1,6 +1,103 @@
 <!DOCTYPE html>
 <html lang="de-CH">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Zeitstrahl</title>
-<meta http-equiv="refresh" content="0; url=designs.html"></head>
-<body><p>Die App ist im Aufbau. <a href="designs.html">Zu den Designentwürfen</a></p></body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zeitstrahl</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zeitstrahl">
+<meta name="theme-color" content="#0b0e1a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- START -->
+<section id="home" class="screen on">
+  <div class="hero">
+    <div class="kicker">Vom Urknall bis heute</div>
+    <h1>Zeitstrahl</h1>
+    <p>13,8 Milliarden Jahre zum Ablaufen.</p>
+  </div>
+  <div class="cards">
+    <button class="big" data-go="walk">🚶 Zeitreise starten</button>
+    <button class="big alt" data-go="plan">🗺️ Strecke planen <small>Lehrperson</small></button>
+  </div>
+  <div class="offline">
+    <div id="offStatus">Offline-Status wird geprüft …</div>
+    <button id="btnCacheAll" class="small">Alles für offline laden</button>
+  </div>
+  <p class="hint">Tipp: Vor dem Rausgehen die App im WLAN einmal öffnen und „Alles für offline laden“ antippen, bis alles grün ist.</p>
+</section>
+
+<!-- PLANEN -->
+<section id="plan" class="screen">
+  <header class="top"><button class="back" data-go="home">‹</button><h2>Strecke planen</h2></header>
+  <div class="planbar">
+    <label>Länge <input id="len" type="number" min="5" max="5000" step="5" value="50"> m</label>
+    <span id="planHint">Tippe auf die Karte: zuerst den <b>Start</b>, dann die <b>Richtung</b>.</span>
+    <button id="btnReset" class="small">Neu setzen</button>
+  </div>
+  <div id="planMap" class="map"></div>
+  <div class="planactions">
+    <button id="btnTiles" class="small">Karte offline speichern</button>
+    <button id="btnPrint" class="small">QR-Karten drucken</button>
+    <button id="btnPlanQR" class="small">Plan auf Schüler-iPads übertragen</button>
+  </div>
+  <div id="coneList" class="conelist"></div>
+</section>
+
+<!-- LAUFEN -->
+<section id="walk" class="screen">
+  <header class="top"><button class="back" data-go="home">‹</button><h2>Zeitreise</h2></header>
+  <button id="btnScan" class="scanbtn">📷 Hütchen scannen</button>
+  <div id="walkMap" class="map small"></div>
+  <p id="walkNoPlan" class="hint">Noch keine Karte. Die Lehrperson kann den Plan-QR zeigen: einfach scannen.</p>
+  <h3 class="sub">Ohne Kamera: Hütchen antippen</h3>
+  <div id="walkList" class="conelist tappable"></div>
+</section>
+
+<!-- DRUCK -->
+<section id="print" class="screen">
+  <header class="top noprint"><button class="back" data-go="plan">‹</button><h2>QR-Karten</h2><button class="small" onclick="window.print()">Drucken</button></header>
+  <p class="hint noprint">Je eine Karte pro Hütchen. Auf A4 drucken, in vier Karten schneiden.</p>
+  <div id="printCards" class="printcards"></div>
+</section>
+
+<!-- STATION -->
+<div id="station" class="overlay">
+  <div class="st" id="stInner"></div>
+</div>
+
+<!-- SCANNER -->
+<div id="scanner" class="overlay dark">
+  <video id="video" playsinline muted></video>
+  <div class="scanframe"></div>
+  <div class="scantext">QR-Code am Hütchen ins Feld halten</div>
+  <button class="closebtn" id="btnScanClose">✕</button>
+</div>
+
+<!-- PLAN-QR -->
+<div id="planqr" class="overlay light">
+  <div class="planqrbox">
+    <h2>Plan übertragen</h2>
+    <p>Schülerinnen und Schüler öffnen die App, tippen auf „Zeitreise starten“ und scannen diesen Code.</p>
+    <div id="planQRsvg"></div>
+    <button class="small" id="btnPlanQRClose">Schliessen</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="stations.js"></script>
+<script src="app.js"></script>
+</body>
 </html>

@@ -1,0 +1,111 @@
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;background:#0b0e1a;color:#eef;-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer}
+.screen{display:none;min-height:100vh;padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 24px)}
+.screen.on{display:block}
+
+/* Start */
+#home{background:radial-gradient(ellipse at 50% 0%,#24305e 0%,#0b0e1a 65%);padding:calc(env(safe-area-inset-top) + 48px) 24px 40px;text-align:center}
+.hero .kicker{text-transform:uppercase;letter-spacing:.14em;font-size:14px;color:#ffd27a}
+.hero h1{font-family:Fraunces,Georgia,serif;font-size:clamp(56px,12vw,110px);line-height:1;margin:10px 0}
+.hero p{font-size:20px;opacity:.8}
+.cards{display:grid;gap:16px;max-width:520px;margin:44px auto 28px}
+.big{padding:26px;border-radius:22px;border:0;background:#ffd27a;color:#1a1200;font-size:24px;font-weight:800}
+.big.alt{background:#1c2340;color:#eef;border:1px solid #39436e}
+.big small{display:block;font-size:14px;font-weight:400;opacity:.7;margin-top:4px}
+.offline{max-width:520px;margin:0 auto;padding:16px;border-radius:16px;background:#141a30;display:flex;gap:12px;align-items:center;justify-content:space-between;text-align:left;font-size:15px}
+.ok{color:#7be0a0}.warn{color:#ffb36b}
+.hint{max-width:620px;margin:14px auto;padding:0 16px;font-size:14px;opacity:.65;line-height:1.5}
+.small{padding:10px 14px;border-radius:12px;border:1px solid #39436e;background:#1c2340;color:#eef;font-size:15px;white-space:nowrap}
+
+/* Kopfzeile */
+.top{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#0b0e1a;position:sticky;top:0;z-index:500}
+.top h2{flex:1;font-size:22px}
+.back{width:44px;height:44px;border-radius:50%;border:0;background:#1c2340;color:#fff;font-size:26px;line-height:1}
+
+/* Planen */
+#plan{background:#0f1324}
+.planbar,.planactions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 16px;font-size:15px}
+.planbar input{width:90px;padding:8px;border-radius:10px;border:0;font:inherit;margin:0 4px}
+#planHint{flex:1;min-width:220px;opacity:.8}
+.map{height:52vh;margin:0 16px;border-radius:16px;overflow:hidden;background:#1c2340}
+.map.small{height:38vh}
+.conelist{padding:10px 16px;display:grid;gap:8px}
+.cone{display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:14px;background:#151b33;text-align:left;color:#eef;border:0;width:100%}
+.cone .n{flex:none;width:42px;height:42px;border-radius:50%;background:#ffd27a;color:#1a1200;font-weight:800;display:grid;place-items:center;font-size:18px}
+.cone.gap .n{background:#39436e;color:#fff}
+.cone .m{font-weight:800;font-size:18px;min-width:76px}
+.cone .t{font-size:15px;opacity:.85;line-height:1.35}
+.cone .seen{margin-left:auto;color:#7be0a0;font-size:20px}
+
+/* Laufen */
+#walk{background:#0f1324}
+.scanbtn{display:block;width:calc(100% - 32px);margin:12px 16px 16px;padding:26px;border-radius:22px;border:0;background:#ffd27a;color:#1a1200;font-size:26px;font-weight:800}
+.sub{padding:18px 16px 0;font-size:16px;opacity:.7}
+
+/* Overlays */
+.overlay{display:none;position:fixed;inset:0;z-index:2000}
+.overlay.on{display:block}
+.overlay.dark{background:#000}
+.overlay.light{background:#0b0e1acc;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.scanframe{position:absolute;left:50%;top:45%;width:min(70vw,380px);aspect-ratio:1;transform:translate(-50%,-50%);border:4px solid #ffd27a;border-radius:24px;box-shadow:0 0 0 100vmax #0007}
+.scantext{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 60px);text-align:center;font-size:20px;font-weight:600}
+.closebtn{position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:14px;width:52px;height:52px;border-radius:50%;border:0;background:#000a;color:#fff;font-size:24px;z-index:5}
+.planqrbox{max-width:480px;margin:10vh auto;background:#fff;color:#111;border-radius:24px;padding:28px;text-align:center}
+.planqrbox p{margin:10px 0 18px;line-height:1.45}
+.planqrbox svg{width:min(70vw,320px);height:auto}
+.planqrbox .small{background:#111;color:#fff;margin-top:14px}
+
+/* Station: Poster (D) mit Zeitband (C) */
+.st{position:absolute;inset:0;background:#000;color:#fff;overflow:hidden}
+.st .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.st .gapbg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#1a1f35 0%,#05060b 70%)}
+.st .gapbg::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 70% 60%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 40% 80%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 85% 20%,#fff7 50%,transparent 51%),radial-gradient(1px 1px at 55% 15%,#fff6 50%,transparent 51%)}
+.st .shade{position:absolute;inset:0;background:linear-gradient(180deg,#0006 0%,#0000 22%,#0000 35%,#000d 72%)}
+.st .num{position:absolute;top:calc(env(safe-area-inset-top) + 22px);left:26px;right:90px;font-family:Fraunces,Georgia,serif;font-weight:700;font-size:clamp(68px,14vw,140px);line-height:.9;text-shadow:0 4px 30px #000a}
+.st .num small{display:block;font-size:.24em;font-family:Inter,sans-serif;font-weight:600;letter-spacing:.03em;margin-top:8px}
+.st .panel{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);padding:22px 24px 18px;border-radius:24px;background:#0007;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid #fff3}
+.st h1{font-size:clamp(26px,4.6vw,40px);margin-bottom:8px}
+.st p{font-size:clamp(18px,2.6vw,22px);line-height:1.5}
+.st .band{margin-top:20px}
+.st .track{position:relative;height:14px;background:linear-gradient(90deg,#1b1b3a,#3a2a6b 30%,#b4532a 70%,#2a8f5a);border-radius:7px}
+.st .marker{position:absolute;top:-9px;width:6px;height:32px;background:#fff;border-radius:3px;transform:translateX(-3px);box-shadow:0 0 12px #fff}
+.st .ends{display:flex;justify-content:space-between;font-size:13px;margin-top:8px;opacity:.75}
+.st .meta{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-top:10px;font-size:15px}
+.st .meta b{font-size:20px}
+.st .credit{font-size:11px;opacity:.6;margin-top:8px}
+.st .credit a{color:inherit}
+.st .pager{position:absolute;top:calc(env(safe-area-inset-top) + 84px);right:14px;display:flex;flex-direction:column;gap:10px}
+.st .pager button{width:52px;height:52px;border-radius:50%;border:0;background:#000a;color:#fff;font-size:24px}
+.st .dots{font-size:14px;text-align:center;background:#000a;border-radius:20px;padding:4px 0}
+
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%) translateY(150%);background:#fff;color:#111;padding:14px 20px;border-radius:14px;font-weight:600;z-index:3000;transition:transform .3s;max-width:90vw;text-align:center}
+#toast.on{transform:translateX(-50%) translateY(0)}
+
+/* Leaflet Marker */
+.conemark{background:#ffd27a;color:#1a1200;border:2px solid #1a1200;border-radius:50%;font-weight:800;font-size:13px;display:grid;place-items:center}
+.conemark.gap{background:#c6cbe6}
+
+/* Druck */
+#print{background:#fff;color:#111}
+#print .top{background:#fff}
+#print .top h2{color:#111}
+#print .back{background:#eee;color:#111}
+#print .small{background:#111;color:#fff;border:0}
+#print .hint{color:#111}
+.printcards{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:210mm;margin:0 auto}
+.pcard{height:148mm;border:1px dashed #999;padding:10mm;display:flex;flex-direction:column;align-items:center;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.pcard .pn{font-family:Fraunces,Georgia,serif;font-size:44px;font-weight:700;line-height:1}
+.pcard .pm{font-size:20px;font-weight:800;margin:4px 0 8px}
+.pcard svg{width:62mm;height:62mm}
+.pcard .pt{font-size:13px;margin-top:8px;line-height:1.35}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .noprint,#home,#plan,#walk,.overlay,#toast{display:none!important}
+  #print{display:block!important;padding:0}
+  .printcards{max-width:none}
+  .pcard:nth-child(4n){page-break-after:always}
+}
