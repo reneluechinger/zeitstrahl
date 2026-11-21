@@ -1,5 +1,5 @@
 // Service Worker: macht die App offline-fähig.
-const VERSION = "zs-v2";
+const VERSION = "zs-v3";
 const SHELL = [
   "./", "./index.html", "./style.css", "./app.js", "./stations.js", "./manifest.webmanifest",
   "./icon-180.png", "./icon-192.png", "./icon-512.png",
