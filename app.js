@@ -94,9 +94,6 @@ function initPlan() {
       else plan.e = p;
       save("zs-plan", plan); refreshPlan();
     });
-    if (navigator.geolocation && !plan.s) {
-      navigator.geolocation.getCurrentPosition(pos => planMap.setView([pos.coords.latitude, pos.coords.longitude], 18), () => {}, { timeout: 5000 });
-    }
   }
   setTimeout(() => { planMap.invalidateSize(); refreshPlan(); }, 50);
 }
@@ -106,9 +103,10 @@ function refreshPlan() {
     : !plan.e ? "Jetzt in die <b>Richtung</b> tippen, in die gelaufen wird." : "Strecke steht. Erneut tippen setzt einen neuen Start.";
   renderConeList($("#coneList"), false);
 }
-$("#len").addEventListener("input", () => {
-  const v = Math.max(5, Math.min(5000, +$("#len").value || 50));
-  plan.len = v; save("zs-plan", plan); if (planMap) refreshPlan();
+$("#len").addEventListener("change", () => {
+  const raw = String($("#len").value).replace(",", ".");
+  const v = Math.max(5, Math.min(5000, parseFloat(raw) || plan.len || 50));
+  $("#len").value = v; plan.len = v; save("zs-plan", plan); if (planMap) refreshPlan();
 });
 $("#btnReset").addEventListener("click", () => { plan.s = plan.e = null; save("zs-plan", plan); refreshPlan(); });
 
@@ -131,24 +129,32 @@ function tileXY(lat, lng, z) {
   const y = Math.floor((1 - Math.log(Math.tan(rad(lat)) + 1 / Math.cos(rad(lat))) / Math.PI) / 2 * n);
   return [x, y];
 }
-$("#btnTiles").addEventListener("click", async () => {
-  if (!plan.s || !plan.e) return toast("Zuerst Start und Richtung setzen.");
+function tileUrls() {
   const end = conePoint(plan.len), pad = 0.0006 + plan.len / 111000 * 0.3;
   const minLat = Math.min(plan.s[0], end[0]) - pad, maxLat = Math.max(plan.s[0], end[0]) + pad;
   const minLng = Math.min(plan.s[1], end[1]) - pad, maxLng = Math.max(plan.s[1], end[1]) + pad;
-  const urls = [];
-  for (let z = 15; z <= 19; z++) {
-    const [x1, y1] = tileXY(maxLat, minLng, z), [x2, y2] = tileXY(minLat, maxLng, z);
-    for (let x = x1; x <= x2; x++) for (let y = y1; y <= y2; y++) urls.push(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
+  // bei langen Strecken die feinsten Zoomstufen weglassen
+  for (let zmax = 19; zmax >= 15; zmax--) {
+    const urls = [];
+    for (let z = 14; z <= zmax; z++) {
+      const [x1, y1] = tileXY(maxLat, minLng, z), [x2, y2] = tileXY(minLat, maxLng, z);
+      for (let x = x1; x <= x2; x++) for (let y = y1; y <= y2; y++) urls.push(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
+    }
+    if (urls.length <= 300 || zmax === 15) return urls;
   }
-  if (urls.length > 400) return toast("Strecke zu lang zum Speichern der Karte.");
-  const cache = await caches.open("zs-data"); let ok = 0;
-  toast(`Speichere ${urls.length} Kartenteile …`, 60000);
+}
+async function prefetchTiles(quiet) {
+  if (!plan.s || !plan.e) { if (!quiet) toast("Zuerst Start und Richtung setzen."); return; }
+  if (!navigator.onLine) { if (!quiet) toast("Dafür braucht es Internet (WLAN)."); return; }
+  const urls = tileUrls(), cache = await caches.open("zs-data"); let ok = 0;
+  toast(`Speichere Karte (${urls.length} Teile) …`, 120000);
   for (const u of urls) {
-    try { if (!(await cache.match(u))) { const r = await fetch(u, { mode: "cors" }); if (r.ok) await cache.put(u, r); } ok++; } catch {}
+    try { if (await cache.match(u)) ok++; else { const r = await fetch(u, { mode: "cors" }); if (r.ok) { await cache.put(u, r); ok++; } } } catch {}
   }
   toast(ok === urls.length ? "Karte ist offline gespeichert ✓" : `Nur ${ok} von ${urls.length} Kartenteilen gespeichert. Internet prüfen.`);
-});
+}
+$("#btnTiles").addEventListener("click", () => prefetchTiles(false));
+$("#btnWalkTiles").addEventListener("click", () => prefetchTiles(false));
 $("#btnPrint").addEventListener("click", () => go("print"));
 
 // Plan-QR
@@ -169,15 +175,16 @@ $("#btnPlanQRClose").addEventListener("click", () => $("#planqr").classList.remo
 
 // ---------- Druck ----------
 function renderPrint() {
-  const el = $("#printCards"); el.innerHTML = "";
-  for (const c of cones(plan.len)) {
+  const el = $("#printCards"); el.innerHTML = ""; let sheet;
+  cones(plan.len).forEach((c, k) => {
+    if (k % 4 === 0) { sheet = document.createElement("div"); sheet.className = "sheet"; el.appendChild(sheet); }
     const ids = c.stations.map(s => s.id).join(",");
     const d = document.createElement("div"); d.className = "pcard";
     d.innerHTML = `<div class="pn">Hütchen ${c.n}</div><div class="pm">bei ${fmtDist(c.pos)}</div>
       ${qrSvg(`ZS:${plan.len}:${ids}`)}
       <div class="pt">${c.stations.map(s => s.gap ? "· Zwischenhütchen" : `· ${s.title}`).join("<br>")}</div>`;
-    el.appendChild(d);
-  }
+    sheet.appendChild(d);
+  });
 }
 
 // ---------- Laufen ----------
@@ -186,6 +193,9 @@ function initWalk() {
   renderConeList($("#walkList"), true);
   const has = plan.s && plan.e;
   $("#walkMap").style.display = has ? "" : "none";
+  $("#walkTilesRow").style.display = has ? "" : "none";
+  $("#walkList").style.display = has ? "" : "none";
+  document.querySelector("#walk .sub").style.display = has ? "" : "none";
   $("#walkNoPlan").style.display = has ? "none" : "";
   if (!has) return;
   if (!walkMap) { walkMap = makeMap("walkMap"); walkLayer = L.layerGroup().addTo(walkMap); }
@@ -196,9 +206,9 @@ function initWalk() {
 let cur = { list: [], i: 0 };
 function numParts(s) {
   if (s.years === 0) return ["Heute", ""];
-  if (s.years >= 1e9) return [(s.years / 1e9).toLocaleString("de-CH", { maximumFractionDigits: 2 }), "Milliarden Jahre her"];
-  if (s.years >= 1e6) return [Math.round(s.years / 1e6).toLocaleString("de-CH"), "Millionen Jahre her"];
-  return [Math.round(s.years / 1e3).toLocaleString("de-CH"), "Tausend Jahre her"];
+  if (s.years >= 1e9) return [fmtNum(s.years / 1e9, s.years >= 1e10 ? 1 : 2), "Milliarden Jahre her"];
+  if (s.years >= 1e6) return [fmtNum(Math.round(s.years / 1e6), 0), "Millionen Jahre her"];
+  return [fmtNum(Math.round(s.years / 1e3), 0), "Tausend Jahre her"];
 }
 function openStations(list) {
   cur = { list, i: 0 }; renderStation(); $("#station").classList.add("on");
@@ -210,7 +220,7 @@ function renderStation() {
   const pct = (1 - s.years / UNIVERSE_AGE) * 100;
   const pos = positionM(s, plan.len), rest = plan.len - roundHalf(pos);
   const visual = s.gap ? `<div class="gapbg"></div>` : `<img class="photo" src="${imgUrl(s.img)}" alt="${s.title}">`;
-  const credit = s.gap ? "" : `<div class="credit">Bild: ${s.credit} · ${s.license} · Wikimedia Commons</div>`;
+  const credit = s.gap ? "" : `<div class="credit">Bild: ${s.credit} · ${s.license} · <a href="${commonsPage(s.img)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>`;
   const many = cur.list.length > 1;
   $("#stInner").innerHTML = `${visual}<div class="shade"></div>
     <div class="num">${n}<small>${u}</small></div>
@@ -249,8 +259,10 @@ async function startScan() {
   } catch {
     return toast("Kamera nicht verfügbar. Bitte das Hütchen in der Liste antippen.", 4000);
   }
-  const v = $("#video"); v.srcObject = stream; await v.play();
-  $("#scanner").classList.add("on"); scanning = true; requestAnimationFrame(tick);
+  $("#scanner").classList.add("on");
+  const v = $("#video"); v.srcObject = stream;
+  try { await v.play(); } catch { stopScan(); return toast("Kamera konnte nicht starten. Bitte das Hütchen in der Liste antippen.", 4000); }
+  scanning = true; requestAnimationFrame(tick);
 }
 function stopScan() {
   scanning = false; $("#scanner").classList.remove("on");
@@ -279,8 +291,9 @@ function handleCode(txt) {
   m = txt.match(/^ZSP:(\d+(?:\.\d+)?);(-?[\d.]+),(-?[\d.]+);(-?[\d.]+),(-?[\d.]+)$/);
   if (m) {
     plan = { len: +m[1], s: [+m[2], +m[3]], e: [+m[4], +m[5]] }; save("zs-plan", plan);
+    seen = new Set(); save("zs-seen", []);
     stopScan(); toast("Plan übernommen ✓");
-    initWalk(); return true;
+    initWalk(); setTimeout(() => prefetchTiles(true), 1200); return true;
   }
   return false;
 }
@@ -291,24 +304,34 @@ async function checkOffline() {
   const el = $("#offStatus");
   if (!("caches" in window) || !("serviceWorker" in navigator)) { el.innerHTML = '<span class="warn">Offline nicht möglich in diesem Browser.</span>'; return; }
   let n = 0; for (const u of IMG_URLS) if (await caches.match(u)) n++;
-  const shell = !!(await caches.match("./app.js"));
+  const shell = !!(await caches.match("./app.js")) && !!(await caches.match("./vendor/fonts/inter-latin-400-normal.woff2"));
   el.innerHTML = (n === IMG_URLS.length && shell)
     ? `<span class="ok">✓ Offline bereit: App und alle ${n} Bilder gespeichert</span>`
     : `<span class="warn">Bilder offline: ${n} von ${IMG_URLS.length}${shell ? "" : " · App noch nicht gespeichert"}</span>`;
 }
+// Bild laden wie in der Stationsansicht: der Service Worker speichert es dabei.
+// onload feuert nur, wenn wirklich ein Bild ankam (kein Fehler, keine 404).
+function loadImg(u) {
+  return new Promise(res => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = u; });
+}
 $("#btnCacheAll").addEventListener("click", async () => {
-  const cache = await caches.open("zs-data"); let fail = 0;
-  toast("Lade Bilder …", 60000);
-  for (const u of IMG_URLS) {
-    if (await cache.match(u)) continue;
-    try {
-      let r; try { r = await fetch(u, { mode: "cors" }); } catch { r = await fetch(u, { mode: "no-cors" }); }
-      if (r.ok || r.type === "opaque") await cache.put(u, r); else fail++;
-    } catch { fail++; }
+  if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+    toast("Einen Moment: die App wird eingerichtet. Bitte Seite neu laden und nochmals tippen.", 4000); return;
   }
-  toast(fail ? `${fail} Bilder konnten nicht geladen werden. Internet prüfen.` : "Alles offline gespeichert ✓");
+  toast("Lade Bilder …", 120000);
+  const results = await Promise.all(IMG_URLS.map(loadImg));
+  const fail = results.filter(x => !x).length;
+  await new Promise(r => setTimeout(r, 800));
+  toast(fail ? `${fail} Bilder konnten nicht geladen werden. Internet prüfen.` : "Alle Bilder offline gespeichert ✓");
   checkOffline();
 });
+$("#btnResetSeen").addEventListener("click", () => { seen = new Set(); save("zs-seen", []); toast("Haken zurückgesetzt ✓"); });
+// Hinweis, wenn die App in Safari statt vom Home-Bildschirm läuft (iPad)
+(function () {
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = window.navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+  if (ios && !standalone) $("#safariWarn").style.display = "block";
+})();
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").then(() => setTimeout(checkOffline, 1500));
 checkOffline();

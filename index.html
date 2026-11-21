@@ -11,7 +11,6 @@
 <meta name="theme-color" content="#0b0e1a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@400;600;800&display=swap">
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -28,11 +27,13 @@
     <button class="big" data-go="walk">🚶 Zeitreise starten</button>
     <button class="big alt" data-go="plan">🗺️ Strecke planen <small>Lehrperson</small></button>
   </div>
+  <div id="safariWarn" class="safariwarn">Du bist im Safari-Browser. Für den Offline-Betrieb: Teilen-Symbol → <b>Zum Home-Bildschirm</b>, dann die App <b>vom Home-Bildschirm aus</b> im WLAN öffnen und dort „Alles für offline laden“ antippen. Safari und die Home-Bildschirm-App speichern getrennt.</div>
   <div class="offline">
     <div id="offStatus">Offline-Status wird geprüft …</div>
     <button id="btnCacheAll" class="small">Alles für offline laden</button>
   </div>
-  <p class="hint">Tipp: Vor dem Rausgehen die App im WLAN einmal öffnen und „Alles für offline laden“ antippen, bis alles grün ist.</p>
+  <p class="hint">So wird es offline-fähig: 1. In Safari öffnen und „Zum Home-Bildschirm“ wählen. 2. Die App vom Home-Bildschirm aus im WLAN öffnen. 3. „Alles für offline laden“ antippen, bis alles grün ist. 4. Im Schulzimmer den Plan-QR der Lehrperson scannen, dann wird auch die Karte gespeichert.</p>
+  <button id="btnResetSeen" class="small" style="display:block;margin:10px auto">Haken zurücksetzen (neue Klasse)</button>
 </section>
 
 <!-- PLANEN -->
@@ -57,7 +58,8 @@
   <header class="top"><button class="back" data-go="home">‹</button><h2>Zeitreise</h2></header>
   <button id="btnScan" class="scanbtn">📷 Hütchen scannen</button>
   <div id="walkMap" class="map small"></div>
-  <p id="walkNoPlan" class="hint">Noch keine Karte. Die Lehrperson kann den Plan-QR zeigen: einfach scannen.</p>
+  <div class="planactions" id="walkTilesRow"><button id="btnWalkTiles" class="small">Karte offline laden</button></div>
+  <p id="walkNoPlan" class="hint">Noch kein Plan auf diesem iPad. Bitte zuerst im Schulzimmer (WLAN) den Plan-QR der Lehrperson scannen. Danach erscheinen Karte und Hütchen-Liste.</p>
   <h3 class="sub">Ohne Kamera: Hütchen antippen</h3>
   <div id="walkList" class="conelist tappable"></div>
 </section>
@@ -76,7 +78,7 @@
 
 <!-- SCANNER -->
 <div id="scanner" class="overlay dark">
-  <video id="video" playsinline muted></video>
+  <video id="video" playsinline muted autoplay></video>
   <div class="scanframe"></div>
   <div class="scantext">QR-Code am Hütchen ins Feld halten</div>
   <button class="closebtn" id="btnScanClose">✕</button>
