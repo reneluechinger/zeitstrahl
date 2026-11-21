@@ -1,5 +1,5 @@
 // Service Worker: macht die App offline-fähig.
-const VERSION = "zs-v3";
+const VERSION = "zs-v4";
 const SHELL = [
   "./", "./index.html", "./style.css", "./app.js", "./stations.js", "./manifest.webmanifest",
   "./icon-180.png", "./icon-192.png", "./icon-512.png",
@@ -13,7 +13,7 @@ const RUNTIME_HOSTS = ["tile.openstreetmap.org",
   "commons.wikimedia.org", "upload.wikimedia.org"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", e => {
@@ -33,7 +33,7 @@ self.addEventListener("fetch", e => {
   if (sameOrigin) {
     const fromCache = () => caches.match(req, { ignoreSearch: req.mode === "navigate" })
       .then(r => r || (req.mode === "navigate" ? caches.match("./index.html") : undefined));
-    const net = fetch(req).then(res => {
+    const net = fetch(req, { cache: "no-cache" }).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       return res;
     });
